@@ -39,11 +39,11 @@ public class Main {
                     int firstSpace = rest.indexOf(' ');
                     String key, value;
                     if (firstSpace < 0) {
-                        key = rest;
+                        key = rest.trim();
                         value = "";
                     } else {
-                        key = rest.substring(0, firstSpace);
-                        value = rest.substring(firstSpace + 1);
+                        key = rest.substring(0, firstSpace).trim();
+                        value = rest.substring(firstSpace + 1).trim();
                     }
                     index.set(key, value);
                     try {
