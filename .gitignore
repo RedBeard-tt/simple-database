@@ -5,6 +5,14 @@ out/
 # Data file (optional: remove if you want to track data.db)
 data.db
 
+# Cursor
+.cursor/
+.cursorignore
+.cursorindexingignore
+
+# SpecStory
+.specstory/
+
 # IDE
 .idea/
 *.iml
