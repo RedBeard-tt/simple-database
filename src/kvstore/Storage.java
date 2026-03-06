@@ -34,17 +34,17 @@ public class Storage {
         try (BufferedReader r = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
             String line;
             while ((line = r.readLine()) != null) {
-                line = line.trim();
+                line = line.replace("\r", "").trim();
                 if (line.startsWith(SET_PREFIX)) {
                     String rest = line.substring(SET_PREFIX.length()).trim();
                     int firstSpace = rest.indexOf(' ');
                     String key, value;
                     if (firstSpace < 0) {
-                        key = rest;
+                        key = rest.trim();
                         value = "";
                     } else {
-                        key = rest.substring(0, firstSpace);
-                        value = rest.substring(firstSpace + 1);
+                        key = rest.substring(0, firstSpace).trim();
+                        value = rest.substring(firstSpace + 1).trim();
                     }
                     index.set(key, value);
                 }

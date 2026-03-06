@@ -38,8 +38,10 @@ Values may contain spaces (e.g. `SET name John Doe`).
    ```text
    java -cp out kvstore.Main
    ```
-3. Ensure the project is built first (`javac -d out -encoding UTF-8 --release 8 src/kvstore/*.java`).
-4. The tester will pipe commands to STDIN; no manual input is required.
+3. Ensure the project is built first (`javac -d out -encoding UTF-8 --release 8 src/kvstore/*.java` or `build.bat`).
+4. For a clean run, delete `data.db` before running Gradebot so the first test starts with no prior state:  
+   `del data.db` (Windows) or `rm -f data.db` (Unix).
+5. The tester will pipe commands to STDIN; no manual input is required.
 
 ## Design
 

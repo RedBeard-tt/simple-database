@@ -27,7 +27,7 @@ public class Main {
         try {
             String line;
             while ((line = in.readLine()) != null) {
-                line = line.trim();
+                line = line.replace("\r", "").replace("\uFEFF", "").trim();
                 if (line.isEmpty()) {
                     continue;
                 }
