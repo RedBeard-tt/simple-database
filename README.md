@@ -43,6 +43,16 @@ Values may contain spaces (e.g. `SET name John Doe`).
    `del data.db` (Windows) or `rm -f data.db` (Unix).
 5. The tester will pipe commands to STDIN; no manual input is required.
 
+### If SetGet, OverwriteKey, or Persistence fail
+
+- **Working directory** must be the project folder so `data.db` is created and reused in one place. In Gradebot, set the work directory to the full project path (e.g. `C:\Users\tjpta\simple database`).
+- **Alternative run command** so the working directory is always the project folder:
+  ```text
+  run.bat
+  ```
+  (Ensure Gradebot’s work directory is the project root so `run.bat` and `out\` are there.)
+- Delete `data.db` before each full Gradebot run so the first test does not see old data.
+
 ## Design
 
 - **Index**: Custom `KeyValueIndex` (list of key-value entries, linear scan). No `HashMap`/`Map`.
