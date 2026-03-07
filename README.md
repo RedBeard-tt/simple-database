@@ -2,22 +2,24 @@
 
 A minimal persistent key-value store with **SET**, **GET**, and **EXIT** commands. Uses an append-only log (`data.db`) and a custom in-memory index (no `Map`).
 
+**EUID**: tjt0134
+
 ## Build and run
 
-From the project root (e.g. `simple database`):
+From the project root:
 
-```bash
+```powershell
 # Compile
-javac -d out -encoding UTF-8 --release 8 src/kvstore/*.java
+.\build.bat
 
-# Run (interactive or piped input for Gradebot)
+# Run interactively
 java -cp out kvstore.Main
 ```
 
-On Windows (PowerShell):
+Or manually:
 
 ```powershell
-javac -d out -encoding UTF-8 --release 8 src/kvstore/*.java
+javac -d out -encoding UTF-8 --release 8 src\kvstore\*.java
 java -cp out kvstore.Main
 ```
 
@@ -33,28 +35,16 @@ Values may contain spaces (e.g. `SET name John Doe`).
 
 ## Gradebot / Black-box testing
 
-1. Set **work directory** to this project root (where `src/` and `out/` live).
+1. Set **work directory** to this project root.
 2. Set **command to run** to:
-   ```text
+   ```
    java -cp out kvstore.Main
    ```
-3. Ensure the project is built first (`javac -d out -encoding UTF-8 --release 8 src/kvstore/*.java` or `build.bat`).
-4. For a clean run, delete `data.db` before running Gradebot so the first test starts with no prior state:  
-   `del data.db` (Windows) or `rm -f data.db` (Unix).
-5. The tester will pipe commands to STDIN; no manual input is required.
-
-### If SetGet, OverwriteKey, or Persistence fail
-
-- **Working directory** must be the project folder so `data.db` is created and reused in one place. In Gradebot, set the work directory to the full project path (e.g. `C:\Users\tjpta\simple database`).
-- **Alternative run command** so the working directory is always the project folder:
-  ```text
-  run.bat
-  ```
-  (Ensure Gradebot’s work directory is the project root so `run.bat` and `out\` are there.)
-- Delete `data.db` before each full Gradebot run so the first test does not see old data.
+3. Build the project first (`.\build.bat`).
+4. The tester pipes commands to STDIN; no manual input is required.
 
 ## Design
 
-- **Index**: Custom `KeyValueIndex` (list of key-value entries, linear scan). No `HashMap`/`Map`.
-- **Persistence**: Append-only writes to `data.db`; each line is `SET key value`. On startup, the log is replayed to rebuild the index (last-write-wins).
-- **EUID**: tjt0134
+- **Index**: Custom `KeyValueIndex` — a list of `(key, value)` entries with linear scan. No `HashMap` or any built-in map type.
+- **Persistence**: Every `SET` is immediately appended and flushed to `data.db`. On startup the log is replayed in order to rebuild the index (last-write-wins).
+- **GET correctness**: In addition to the in-memory index, `GET` scans `data.db` directly so writes made by other processes are always visible.
