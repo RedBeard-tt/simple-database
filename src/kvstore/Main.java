@@ -7,13 +7,16 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 
 /**
- * CLI for the key-value store: SET, GET, EXIT via STDIN/STDOUT.
+ * CLI entry point for the key-value store.
+ * Accepts SET, GET, and EXIT commands on STDIN and writes results to STDOUT.
  */
 public class Main {
 
     public static void main(String[] args) {
         KeyValueIndex index = new KeyValueIndex();
         Storage storage = new Storage();
+
+        // Rebuild in-memory index from the append-only log on disk.
         try {
             storage.replay(index);
         } catch (IOException e) {
@@ -27,43 +30,26 @@ public class Main {
         try {
             String line;
             while ((line = in.readLine()) != null) {
-                line = line.replace("\r", "").replace("\uFEFF", "").trim();
+                line = clean(line);
                 if (line.isEmpty()) {
                     continue;
                 }
-                if (line.equals("EXIT")) {
+                String upper = line.toUpperCase();
+
+                if (upper.equals("EXIT")) {
                     break;
                 }
-                if (line.startsWith("SET ")) {
-                    String rest = line.substring(4).trim();
-                    int firstSpace = rest.indexOf(' ');
-                    String key, value;
-                    if (firstSpace < 0) {
-                        key = rest.trim();
-                        value = "";
-                    } else {
-                        key = rest.substring(0, firstSpace).trim();
-                        value = rest.substring(firstSpace + 1).trim();
-                    }
-                    index.set(key, value);
-                    try {
-                        storage.appendSet(key, value);
-                    } catch (IOException e) {
-                        out.println("ERROR: " + e.getMessage());
-                    }
+
+                if (upper.startsWith("SET ")) {
+                    handleSet(line.substring(4).trim(), index, storage, out);
                     continue;
                 }
-                if (line.startsWith("GET ")) {
-                    String key = line.substring(4).trim();
-                    String val = index.get(key);
-                    if (val != null) {
-                        out.println(val);
-                    } else {
-                        out.println();
-                    }
+
+                if (upper.startsWith("GET ")) {
+                    handleGet(clean(line.substring(4)), storage, index, out);
                     continue;
                 }
-                // Unknown command - produce no output so GET response lines stay in sync
+                // Unknown command: produce no output so GET response lines stay in sync.
             }
         } catch (IOException e) {
             System.err.println("Error: " + e.getMessage());
@@ -73,5 +59,53 @@ public class Main {
             } catch (IOException ignored) {
             }
         }
+    }
+
+    private static void handleSet(String rest, KeyValueIndex index,
+                                   Storage storage, PrintWriter out) {
+        int sp = rest.indexOf(' ');
+        String key, value;
+        if (sp < 0) {
+            key = rest.trim();
+            value = "";
+        } else {
+            key = rest.substring(0, sp).trim();
+            value = rest.substring(sp + 1).trim();
+        }
+        index.set(key, value);
+        try {
+            storage.appendSet(key, value);
+        } catch (IOException e) {
+            out.println("ERROR: " + e.getMessage());
+        }
+    }
+
+    private static void handleGet(String key, Storage storage,
+                                   KeyValueIndex index, PrintWriter out) {
+        String val = null;
+
+        // Always read from disk first so we see writes from other processes.
+        try {
+            val = storage.getLatest(key);
+        } catch (IOException ignored) {
+            // Fall back to in-memory index on file error.
+        }
+
+        // If the file scan missed it, try the in-memory index.
+        if (val == null) {
+            val = index.get(key);
+        }
+
+        if (val != null) {
+            out.println(val);
+        } else {
+            out.println();
+        }
+        out.flush();
+    }
+
+    /** Strip carriage returns, BOM, and surrounding whitespace. */
+    private static String clean(String s) {
+        return s.replace("\r", "").replace("\uFEFF", "").trim();
     }
 }

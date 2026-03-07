@@ -1,6 +1,7 @@
 package kvstore;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -26,12 +27,12 @@ public class KeyValueIndex {
 
     private final List<Entry> entries = new ArrayList<>();
 
-    /** Set key to value (last-write-wins). */
+    /** Set key to value (last-write-wins). Ensures only one entry per key. */
     public void set(String key, String value) {
-        for (Entry e : entries) {
-            if (e.getKey().equals(key)) {
-                e.setValue(value);
-                return;
+        Iterator<Entry> it = entries.iterator();
+        while (it.hasNext()) {
+            if (it.next().getKey().equals(key)) {
+                it.remove();
             }
         }
         entries.add(new Entry(key, value));
